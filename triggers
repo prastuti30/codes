@@ -1,0 +1,68 @@
+CREATE OR REPLACE TRIGGER clientmstr_update_trigger
+AFTER UPDATE ON clientmstr
+FOR EACH ROW
+DECLARE
+    v_old_values VARCHAR2(4000);
+BEGIN
+    IF NOT :OLD.deleted THEN
+        -- Record old values
+        v_old_values := 'Old values - Client ID: ' || :OLD.client_id || ', Name: ' || :OLD.client_name || ', Address: ' || :OLD.address || ', Status: ' || :OLD.status;
+        
+        -- Insert old values into audit table
+        INSERT INTO audit_trade (action_type, action_details)
+        VALUES ('UPDATE', v_old_values);
+    END IF;
+END;
+/
+
+CREATE OR REPLACE TRIGGER clientmstr_delete_trigger
+AFTER DELETE ON clientmstr
+DECLARE
+    v_old_values VARCHAR2(4000);
+BEGIN
+    FOR deleted_row IN (SELECT * FROM clientmstr WHERE deleted = 1) LOOP
+        -- Record old values
+        v_old_values := 'Old values - Client ID: ' || deleted_row.client_id || ', Name: ' || deleted_row.client_name || ', Address: ' || deleted_row.address || ', Status: ' || deleted_row.status;
+        
+        -- Insert old values into audit table
+        INSERT INTO audit_trade (action_type, action_details)
+        VALUES ('DELETE', v_old_values);
+    END LOOP;
+END;
+/
+
+
+CREATE OR REPLACE TRIGGER salary_check_trigger
+BEFORE INSERT OR UPDATE ON emp
+FOR EACH ROW
+DECLARE
+    v_new_salary NUMBER;
+BEGIN
+    -- Check if a new salary is being inserted or updated
+    IF INSERTING THEN
+        v_new_salary := :NEW.salary;
+    ELSIF UPDATING THEN
+        v_new_salary := :NEW.salary;
+    END IF;
+
+    -- Check if the new salary is less than Rs. 50,000/-
+    IF v_new_salary < 50000 THEN
+        -- Display error message and raise an exception
+        RAISE_APPLICATION_ERROR(-20001, 'Salary must be Rs. 50,000/- or more.');
+    END IF;
+
+    -- Insert new values into the tracking table
+    INSERT INTO tracking (e_no, salary) VALUES (:NEW.e_no, v_new_salary);
+END;
+/
+
+CREATE OR REPLACE TRIGGER salary_difference_trigger
+AFTER INSERT OR UPDATE OR DELETE ON CUSTOMERS
+FOR EACH ROW
+BEGIN
+    IF INSERTING OR UPDATING THEN
+        DBMS_OUTPUT.PUT_LINE('Salary difference for ' || :OLD.customer_id || ': ' || (:NEW.salary - :OLD.salary));
+    END IF;
+END;
+/
+

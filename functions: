@@ -1,0 +1,43 @@
+CREATE OR REPLACE FUNCTION F_checkAccNO(p_account_no IN VARCHAR2) RETURN NUMBER AS
+    v_count NUMBER := 0;
+BEGIN
+    -- Check if the ACCOUNT_NO exists in the database
+    SELECT COUNT(*)
+    INTO v_count
+    FROM your_table_name
+    WHERE ACCOUNT_NO = p_account_no;
+
+    -- Return 1 if the ACCOUNT_NO exists, otherwise return 0
+    RETURN CASE WHEN v_count > 0 THEN 1 ELSE 0 END;
+END F_checkAccNO;
+/
+
+
+CREATE OR REPLACE FUNCTION check_and_store_account(
+    p_account_no IN VARCHAR2,
+    p_branch_name IN VARCHAR2
+) RETURN VARCHAR2 AS
+    v_status VARCHAR2(10);
+BEGIN
+    -- Check if the account exists and its status is active
+    SELECT status
+    INTO v_status
+    FROM acct_details
+    WHERE account_no = p_account_no
+    AND branch_name = p_branch_name;
+
+    -- If account status is active, store details in active_acc_details and return message
+    IF v_status = 'active' THEN
+        INSERT INTO active_acc_details (account_no, branch_name)
+        VALUES (p_account_no, p_branch_name);
+        RETURN 'Account is active. Details stored successfully.';
+    ELSE
+        RETURN 'Account is inactive.';
+    END IF;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN 'Account not found.';
+    WHEN OTHERS THEN
+        RETURN 'Error: ' || SQLERRM;
+END check_and_store_account;
+/

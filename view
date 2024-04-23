@@ -1,0 +1,151 @@
+CREATE TABLE cust_mstr (
+    cust_no INT PRIMARY KEY,
+    fname VARCHAR(50),
+    lname VARCHAR(50)
+);
+
+CREATE TABLE add_dets (
+    code_no INT PRIMARY KEY,
+    add1 VARCHAR(100),
+    add2 VARCHAR(100),
+    state VARCHAR(50),
+    city VARCHAR(50),
+    pincode VARCHAR(10)
+);
+
+-- Inserting sample data into cust_mstr table
+INSERT INTO cust_mstr (cust_no, fname, lname) VALUES (1, 'John', 'Doe');
+INSERT INTO cust_mstr (cust_no, fname, lname) VALUES (2, 'Alice', 'Smith');
+INSERT INTO cust_mstr (cust_no, fname, lname) VALUES (3, 'Bob', 'Johnson');
+
+-- Inserting sample data into add_dets table
+INSERT INTO add_dets (code_no, add1, add2, state, city, pincode) VALUES (101, '123 Main St', 'Apt 101', 'California', 'Los Angeles', '90001');
+INSERT INTO add_dets (code_no, add1, add2, state, city, pincode) VALUES (102, '456 Oak St', 'Suite 201', 'New York', 'New York City', '10001');
+INSERT INTO add_dets (code_no, add1, add2, state, city, pincode) VALUES (103, '789 Elm St', NULL, 'Texas', 'Houston', '77001');
+
+  SELECT a.add1, a.add2, a.city, a.state, a.pincode
+FROM cust_mstr c
+JOIN add_dets a ON c.cust_no = a.code_no
+WHERE c.fname = 'xyz' AND c.lname = 'pqr';
+-- Create the view
+CREATE OR REPLACE VIEW add_dets_view AS
+SELECT code_no, city
+FROM add_dets;
+
+-- Insert into the view
+INSERT INTO add_dets_view (code_no, city) VALUES (104, 'Chicago');
+
+-- Update the view
+UPDATE add_dets_view
+SET city = 'Dallas'
+WHERE code_no = 104;
+
+-- Delete from the view
+DELETE FROM add_dets_view
+WHERE code_no = 104;
+CREATE TABLE cust_mstr (
+    cust_no INT PRIMARY KEY,
+    fname VARCHAR(50),
+    lname VARCHAR(50)
+);
+
+CREATE TABLE add_dets (
+    code_no INT PRIMARY KEY,
+    pincode VARCHAR(10)
+);
+
+-- Assuming each customer can have multiple addresses, so adding a foreign key reference to cust_mstr table
+ALTER TABLE add_dets ADD CONSTRAINT fk_cust_no FOREIGN KEY (code_no) REFERENCES cust_mstr(cust_no);
+
+-- Query to list customers who do not have bank branches in their vicinity
+SELECT c.cust_no, c.fname, c.lname
+FROM cust_mstr c
+LEFT JOIN add_dets a ON c.cust_no = a.code_no
+WHERE a.code_no IS NULL;
+
+
+  --o4
+  CREATE TABLE cust_mstr (
+    custno INT PRIMARY KEY,
+    fname VARCHAR(50),
+    lname VARCHAR(50)
+);
+
+CREATE TABLE acc_fd_cust_dets (
+    codeno INT PRIMARY KEY,
+    acc_fd_no INT
+);
+
+CREATE TABLE fd_dets (
+    fd_sr_no INT PRIMARY KEY,
+    amt INT
+);
+
+-- Inserting sample data into cust_mstr table
+INSERT INTO cust_mstr (custno, fname, lname) VALUES (1, 'John', 'Doe');
+INSERT INTO cust_mstr (custno, fname, lname) VALUES (2, 'Alice', 'Smith');
+INSERT INTO cust_mstr (custno, fname, lname) VALUES (3, 'Bob', 'Johnson');
+
+-- Inserting sample data into fd_dets table
+INSERT INTO fd_dets (fd_sr_no, amt) VALUES (101, 6000);
+INSERT INTO fd_dets (fd_sr_no, amt) VALUES (102, 4000);
+INSERT INTO fd_dets (fd_sr_no, amt) VALUES (103, 7000);
+
+-- Inserting sample data into acc_fd_cust_dets table
+INSERT INTO acc_fd_cust_dets (codeno, acc_fd_no) VALUES (201, 101);
+INSERT INTO acc_fd_cust_dets (codeno, acc_fd_no) VALUES (202, 102);
+INSERT INTO acc_fd_cust_dets (codeno, acc_fd_no) VALUES (203, 103);
+
+
+  SELECT c.fname, c.lname
+FROM cust_mstr c
+JOIN acc_fd_cust_dets a ON c.custno = a.codeno
+JOIN fd_dets f ON a.acc_fd_no = f.fd_sr_no
+WHERE f.amt > 5000;
+
+
+  -- Create the view
+CREATE OR REPLACE VIEW cust_acc_view AS
+SELECT c.fname AS customer_fname, a.acc_fd_no
+FROM cust_mstr c
+JOIN acc_fd_cust_dets a ON c.custno = a.codeno;
+
+-- Insert into the view
+INSERT INTO cust_acc_view (customer_fname, acc_fd_no) VALUES ('Jane', 104);
+
+-- Update the view
+UPDATE cust_acc_view
+SET customer_fname = 'Mary'
+WHERE acc_fd_no = 104;
+
+-- Delete from the view
+DELETE FROM cust_acc_view
+WHERE acc_fd_no = 104;
+
+
+  CREATE TABLE emp_mstr (
+    emp_no INT PRIMARY KEY,
+    f_name VARCHAR(50),
+    l_name VARCHAR(50),
+    m_name VARCHAR(50),
+    dept VARCHAR(50)
+);
+
+CREATE TABLE cntc_dets (
+    code_no INT PRIMARY KEY,
+    cntc_type VARCHAR(50),
+    cntc_data VARCHAR(100)
+);
+
+-- Assuming each employee can have multiple contact details, so adding a foreign key reference to emp_mstr table
+ALTER TABLE cntc_dets ADD CONSTRAINT fk_emp_no FOREIGN KEY (code_no) REFERENCES emp_mstr(emp_no);
+
+-- Query to list employee details along with contact details using left outer join
+SELECT e.emp_no, e.f_name, e.l_name, e.m_name, e.dept, c.cntc_type, c.cntc_data
+FROM emp_mstr e
+LEFT JOIN cntc_dets c ON e.emp_no = c.code_no;
+
+-- Query to list employee details along with contact details using right outer join
+SELECT e.emp_no, e.f_name, e.l_name, e.m_name, e.dept, c.cntc_type, c.cntc_data
+FROM cntc_dets c
+RIGHT JOIN emp_mstr e ON e.emp_no = c.code_no;
